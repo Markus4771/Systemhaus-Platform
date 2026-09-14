@@ -14,6 +14,7 @@ Die folgende Übersicht trennt bewusst zwischen bereits eingesetzten Systemen, T
 | Wiki | produktiv | interne Wissensbasis und Dokumentation |
 | 3CX | produktiv | Telefonanlage / VoIP |
 | Stempeluhr | produktiv, Eigenentwicklung | Arbeitszeiterfassung / Anwesenheitszeit |
+| ContactSync | Eigenentwicklung, vorhanden | zentrale Synchronisation von Kontakten zwischen den angebundenen Systemen |
 | NetLock RMM | produktiv, früher Ausbau | Endpoint Management, Remote Support, Geräte- und Patchinformationen |
 | Keycloak | produktiv | zentrale Identität / SSO; bereits an die Domäne gekoppelt |
 | Homarr | produktiv | zentrale Startseite / Portal für interne Dienste |
@@ -39,6 +40,7 @@ Die folgende Übersicht trennt bewusst zwischen bereits eingesetzten Systemen, T
 | Wiki | freigegebene Wissensbasis; später mögliche Quelle für RAG/KI |
 | 3CX | zentrale Telefonie mit späterer CTI-/Kunden-/Ticketintegration |
 | Stempeluhr | führendes System für Anwesenheits-/Arbeitszeit; getrennt von abrechenbarer Servicezeit |
+| ContactSync | verbindlicher zentraler Dienst für die Kontaktsynchronisation zwischen Odoo, Nextcloud, Zammad, 3CX und später weiteren Systemen |
 | NetLock RMM | Endpoint Management, Remote Support, Patchmanagement und technische Gerätedaten |
 | Keycloak | zentrale Anmeldung, SSO und MFA; Fachrechte verbleiben in den Zielsystemen |
 | Homarr | Mitarbeiter-Startseite / Application Launcher, nicht Ersatz für das spätere Control Center |
@@ -47,6 +49,45 @@ Die folgende Übersicht trennt bewusst zwischen bereits eingesetzten Systemen, T
 | Rocket.Chat | interner Kommunikationskanal; später Ziel für Benachrichtigungen, Freigaben und Systemmeldungen |
 | Bestellautomation | bestehender Integrationsbaustein; nicht neu bauen, sondern sauber in die Gesamtarchitektur einbinden |
 | Gitea | interne Quellcode- und Entwicklungsplattform; GitHub bleibt für ausgewählte öffentliche Projekte, Releases und übergreifende Dokumentation nutzbar |
+
+## Kontaktsynchronisation mit ContactSync
+
+ContactSync ist die spezialisierte Synchronisationsschicht für Kontakte. Kontaktabgleich, Feldzuordnung, Dublettenbehandlung, Synchronisationsrichtung und Änderungsweitergabe werden dort gebündelt und nicht als verstreute n8n-Einzelflows neu aufgebaut.
+
+### Führende Quelle
+
+Für geschäftliche Kunden- und Ansprechpartnerdaten bleibt **Odoo das führende System**. Die bestehende Odoo-Kundennummer wird als zentrale Customer-ID verwendet.
+
+```text
+                   Odoo
+      führende Kunden und Ansprechpartner
+                    |
+                    v
+               ContactSync
+                    |
+       +------------+------------+
+       |            |            |
+       v            v            v
+   Nextcloud      Zammad        3CX
+    Kontakte      Kontakte    Telefonbuch
+       |
+       v
+Smartphone / Thunderbird
+
+später zusätzlich:
+GLPI / Außendienst-App / Control Center / weitere freigegebene Systeme
+```
+
+### Grundregeln
+
+- Odoo ist für geschäftliche Kundenstammdaten und zentrale Ansprechpartner führend.
+- ContactSync verteilt freigegebene Kontaktfelder an die Zielsysteme.
+- Lokale System-IDs werden auf die zentrale Odoo-Kundennummer bzw. eindeutige Kontaktkennungen abgebildet.
+- Änderungen dürfen nur gemäß definierter Feldhoheit zurückgeschrieben werden.
+- Firmenname, Kundennummer und zentrale Geschäftsdaten dürfen nicht unkontrolliert aus Zielsystemen nach Odoo überschrieben werden.
+- Dubletten und Konflikte werden in ContactSync behandelt.
+- Synchronisation soll protokolliert und nachvollziehbar sein.
+- n8n bleibt für Geschäftsprozesse zuständig und ersetzt ContactSync nicht.
 
 ## Geplante/ergänzende Systeme
 
@@ -59,7 +100,6 @@ Die folgende Übersicht trennt bewusst zwischen bereits eingesetzten Systemen, T
 | Checkmk | Server-, Netzwerk- und Service-Monitoring |
 | Proxmox Backup Server | zentrale Backups und Restore-Tests |
 | Wazuh | spätere SIEM-/Security-Schicht |
-| ContactSync | spezialisierte Kontakt-Synchronisation zwischen Odoo, Nextcloud, Zammad, 3CX u. a. |
 | OpenHands | zukünftiger interner Entwicklungsagent für Codeanalyse, Änderungen, Tests, Dokumentation und Git-Workflows |
 | OpenClaw | zukünftiges Agent-/Mitarbeiter-Gateway für kontrollierten Zugriff auf Werkzeuge und Prozesse |
 | MCP-Server | zukünftige standardisierte Werkzeug- und Kontextschicht für KI-Agenten |
@@ -94,6 +134,7 @@ OpenHands / OpenClaw / weitere KI-Agenten
 
 - **MCP-Server:** Werkzeuge und kontrollierter Kontext für KI-Agenten.
 - **n8n:** Geschäftsprozesse, systemübergreifende Orchestrierung, Freigaben und Aktionen.
+- **ContactSync:** spezialisierte Kontakt-Synchronisation und Konfliktbehandlung.
 - **Node-RED:** technische Ereignisse, IoT, Home Assistant, MQTT, Sensorik und schnelle Event-Flows.
 - **Keycloak:** Identität, Anmeldung, SSO und MFA.
 - **Passbolt:** Secrets und Passwörter; keine allgemeine KI-/RAG-Datenquelle.
@@ -150,7 +191,7 @@ Verknüpft Anwesenheit, Urlaub, Aufgaben, Projekte und abrechenbare Servicezeite
 
 ## Telefonie
 
-3CX ist bereits produktiv im Einsatz und wird als Telefonieplattform beibehalten. Ziel der Integration sind Anruferkennung, Kundenkontext, Click-to-Call, Rückrufaufgaben, Verknüpfung zu Zammad/Odoo und optional Voicemail-Transkription.
+3CX ist bereits produktiv im Einsatz und wird als Telefonieplattform beibehalten. Ziel der Integration sind Anruferkennung, Kundenkontext, Click-to-Call, Rückrufaufgaben, Verknüpfung zu Zammad/Odoo und optional Voicemail-Transkription. Die Bereitstellung konsistenter Kontaktdaten für 3CX erfolgt über ContactSync.
 
 ## Gebäude-, IoT- und Kameraebene
 
@@ -161,5 +202,7 @@ Home Assistant, Homarr und Frigate sind bereits produktiv miteinander im Einsatz
 Die Zukunftsbausteine MCP, OpenHands, OpenClaw, Checkmk und Node-RED werden zunächst nicht installiert. Für den ersten Integrations-PoC werden die vorhandenen Testsysteme genutzt:
 
 **Odoo Test -> n8n -> Zammad Test + GLPI Test**
+
+Die Kontakt-Synchronisation wird dabei nicht neu in n8n gebaut. Für Kontakte wird ContactSync verwendet. n8n bleibt für organisatorische und fachliche Workflows zuständig.
 
 Dabei wird mit künstlichen Testdaten und einer Test-Kundennummer gearbeitet. Erst wenn dieser Datenfluss stabil funktioniert, werden weitere Systeme schrittweise angebunden.
