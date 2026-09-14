@@ -23,11 +23,13 @@ Für jede Datenart gibt es genau ein führendes System. Andere Systeme erhalten 
 
 ## Zentrale Kunden-ID
 
-Jeder Kunde erhält eine unveränderliche technische ID, z. B.:
+Als zentrale Customer-ID wird **die bereits im Unternehmen verwendete Kundennummer** übernommen. Es wird keine zusätzliche technische Nummer wie `K-000001` eingeführt.
 
-`K-000001`
+Beispiel einer bestehenden Kundennummer:
 
-Diese ID wird in allen integrierten Systemen gespeichert bzw. referenziert:
+`10028`
+
+Die Kundennummer muss eindeutig, dauerhaft und unveränderlich einem Kunden zugeordnet sein. Sie wird als gemeinsamer Schlüssel in allen integrierten Systemen gespeichert bzw. referenziert:
 
 - Odoo
 - Zammad
@@ -42,13 +44,17 @@ Diese ID wird in allen integrierten Systemen gespeichert bzw. referenziert:
 
 ## Regeln
 
-1. Die Kunden-ID wird nur einmal erzeugt.
-2. Nachträgliche Namensänderungen ändern die ID nicht.
-3. Synchronisation erfolgt bevorzugt über die ID, nicht über Firmennamen oder E-Mail-Adressen.
-4. Fremdschlüssel/IDs der einzelnen Fachsysteme werden im Integration Core gemappt.
-5. Bei Konflikten gewinnt das definierte führende System.
-6. Löschungen werden nicht blind repliziert; sie benötigen definierte Lifecycle-Regeln.
+1. Bestehende betriebliche Kundennummern werden übernommen.
+2. Neue Kunden erhalten ihre Kundennummer im führenden kaufmännischen System Odoo bzw. nach dem dort festgelegten Nummernkreis.
+3. Eine Kundennummer darf niemals einem anderen Kunden erneut zugeordnet werden.
+4. Nachträgliche Namens-, Adress- oder Ansprechpartneränderungen ändern die Kundennummer nicht.
+5. Synchronisation erfolgt bevorzugt über die Kundennummer, nicht über Firmennamen oder E-Mail-Adressen.
+6. Fremdschlüssel/IDs der einzelnen Fachsysteme werden im Integration Core auf die zentrale Kundennummer gemappt.
+7. Bei Konflikten gewinnt das definierte führende System.
+8. Löschungen werden nicht blind repliziert; sie benötigen definierte Lifecycle-Regeln.
 
-## Offene Entscheidung
+## Entscheidung
 
-Es ist noch festzulegen, ob die zentrale Kunden-ID direkt in Odoo erzeugt wird oder durch den Integration Core vergeben und danach nach Odoo zurückgeschrieben wird. Für den ersten PoC ist eine Erzeugung in Odoo ausreichend.
+Die bisher geplante zusätzliche technische Kunden-ID im Format `K-000001` wird verworfen. Die vorhandene betriebliche Kundennummer ist die zentrale Customer-ID der Systemhaus-Plattform.
+
+Für den ersten PoC wird geprüft, in welchem Odoo-Feld die vorhandene Kundennummer gespeichert ist und wie sie über n8n zuverlässig an Zammad und GLPI übertragen wird.
