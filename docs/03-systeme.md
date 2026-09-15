@@ -14,7 +14,7 @@ Die folgende Übersicht trennt bewusst zwischen bereits eingesetzten Systemen, T
 | Wiki | produktiv | interne Wissensbasis und Dokumentation |
 | 3CX | produktiv | Telefonanlage / VoIP |
 | Stempeluhr | produktiv, Eigenentwicklung | Arbeitszeiterfassung / Anwesenheitszeit |
-| ContactSync | Eigenentwicklung, vorhanden | zentrale Synchronisation von Kontakten zwischen den angebundenen Systemen |
+| ContactSync | Eigenentwicklung, Entwicklungsstand 3.2.09 | spezialisierter zentraler Dienst zur Kontaktsynchronisation; Anbindungen für Nextcloud/CardDAV, Zammad, Odoo und 3CX |
 | NetLock RMM | produktiv, früher Ausbau | Endpoint Management, Remote Support, Geräte- und Patchinformationen |
 | Keycloak | produktiv | zentrale Identität / SSO; bereits an die Domäne gekoppelt |
 | Homarr | produktiv | zentrale Startseite / Portal für interne Dienste |
@@ -54,6 +54,40 @@ Die folgende Übersicht trennt bewusst zwischen bereits eingesetzten Systemen, T
 
 ContactSync ist die spezialisierte Synchronisationsschicht für Kontakte. Kontaktabgleich, Feldzuordnung, Dublettenbehandlung, Synchronisationsrichtung und Änderungsweitergabe werden dort gebündelt und nicht als verstreute n8n-Einzelflows neu aufgebaut.
 
+### Aktueller Entwicklungsstand ContactSync
+
+Der zuletzt erreichte Entwicklungsstand ist **3.2.09**. ContactSync ist als eigenständige Anwendung aufgebaut und soll im Systemhaus-Konzept dauerhaft die spezialisierte Kontakt-Synchronisation übernehmen.
+
+Aktuell bzw. im bisherigen Projektstand vorgesehen sind:
+
+- Nextcloud über CardDAV
+- Zammad
+- Odoo
+- 3CX
+- konfigurierbare Synchronisationsrichtungen im Menü „Synchronisation“
+- Konflikt- und Dublettenbehandlung
+- Audit-/Protokollierung der Synchronisationsvorgänge
+- Backup-/Update-Bereich
+- SMB-Backup
+- CSV-Export der Kontakte
+- Benutzerverwaltung
+- Hilfe-Funktion
+- zentrale Kontaktfelder einschließlich E-Mail-Adresse
+- Kundennummer als wichtiges Zuordnungsfeld
+
+Die Kundennummer ist für die Systemhaus-Plattform besonders wichtig: Es wird keine zusätzliche künstliche `K-...`-Kennung eingeführt. Die vorhandene geschäftliche Odoo-Kundennummer dient als zentrale Customer-ID und soll von ContactSync zur systemübergreifenden Zuordnung mitgeführt werden.
+
+### Geplante Weiterentwicklung im Systemhaus-Konzept
+
+ContactSync soll modular weitergeführt werden. Die bestehenden Odoo-, Zammad-, 3CX- und Nextcloud-Anbindungen werden als spezialisierte Connectoren betrachtet. Weitere Connectoren können später ergänzt werden, insbesondere:
+
+- GLPI
+- Systemhaus Control Center
+- Techniker-Außendienst-App
+- weitere freigegebene Kommunikations- oder CRM-/Service-Systeme
+
+Damit bleibt ContactSync ein eigener Integrationsbaustein und wird nicht durch n8n ersetzt. n8n kann ContactSync jedoch über definierte API-/Webhook-Schnittstellen in übergeordnete Geschäftsprozesse einbinden.
+
 ### Führende Quelle
 
 Für geschäftliche Kunden- und Ansprechpartnerdaten bleibt **Odoo das führende System**. Die bestehende Odoo-Kundennummer wird als zentrale Customer-ID verwendet.
@@ -82,6 +116,7 @@ GLPI / Außendienst-App / Control Center / weitere freigegebene Systeme
 
 - Odoo ist für geschäftliche Kundenstammdaten und zentrale Ansprechpartner führend.
 - ContactSync verteilt freigegebene Kontaktfelder an die Zielsysteme.
+- Kundennummer und E-Mail-Adresse gehören zu den zentralen Zuordnungs-/Kontaktfeldern.
 - Lokale System-IDs werden auf die zentrale Odoo-Kundennummer bzw. eindeutige Kontaktkennungen abgebildet.
 - Änderungen dürfen nur gemäß definierter Feldhoheit zurückgeschrieben werden.
 - Firmenname, Kundennummer und zentrale Geschäftsdaten dürfen nicht unkontrolliert aus Zielsystemen nach Odoo überschrieben werden.
